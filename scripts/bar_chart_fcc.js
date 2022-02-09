@@ -4,10 +4,11 @@ window.addEventListener("DOMContentLoaded", () => {
 		timeout = false, 
 		delay = 350;
 
-    var actualData;
-    var padding = 60;
-    var height = 30,
-        width = 40;
+    var actualData,
+        dater;
+    var padding = 10;
+    var height = 300,
+        width = 400;
 
 function setCoreDimensions(){
 		winHeight = window.innerHeight;
@@ -33,7 +34,6 @@ function changeOrientation(){
 }
 
 /* Fetching JSON data for the graph*/
-var dater;
 fetch('https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json')
     .then(function(response){
         if(!response.ok){
@@ -52,6 +52,24 @@ fetch('https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/maste
     });
 
 const initSvg = () => {
+    
+    console.log("Entered initSvg");
+    let scaledGDP = [];
+    let GDP = actualData.map(d=> d[1]);
+    let maxGDP = d3.max(GDP);
+
+    let linearScale = d3.scaleLinear()
+                        .domain([0, maxGDP])
+                        .range([padding, height-padding]);
+    
+    scaledGDP =GDP.map(d => linearScale(d));
+    console.log(scaledGDP);
+
+
+    let barWidth = width / GDP.length;
+
+    console.log("this is barWidth " +  barWidth + " And below is scaledGDP!");
+    console.log(scaledGDP);
 /*initialising SVG*/
 const svg = d3.select("#visHolder")
               .append("svg")
@@ -59,11 +77,23 @@ const svg = d3.select("#visHolder")
 
 /*setting scales and axes*/
 const xScale = d3.scaleTime()
-                 .domain([d3.extent(actualData, d => d[0])])
-                 .range(padding, width - padding);
+    .domain(d3.extent(actualData, d => d[0]))
+    .range([padding, width - padding]);
 
-console.log("checking out d3 extent below");
-console.log(d3.extent(actualData, d => d[0]));
+const yScale = d3.scaleLinear()
+    .domain(d3.extent(actualData, d=> d[1]))
+    .range([height - padding,  padding]);
+
+
+svg.selectAll("rect")
+    .data(scaledGDP)
+    .enter()
+    .append("rect")
+    .attr("x", (d,i) => i)
+    .attr("y", (d) =>height- d )
+    .attr("width", barWidth)
+    .attr("height", (d) => d)
+    .attr("class", "svgRect");
     
 }
 
