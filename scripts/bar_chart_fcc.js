@@ -55,7 +55,7 @@ const initSvg = () => {
     
     console.log("Entered initSvg");
 
-    let barWidth =  width/actualData.map(d=>d[1]).length;
+    let barWidth =  (width-padding*4)/actualData.map(d=>d[1]).length;
 /*initialising SVG*/
 const svg = d3.select("#visHolder")
               .append("svg")
@@ -66,11 +66,16 @@ const svg = d3.select("#visHolder")
 const xScale = d3.scaleTime()
     .domain(d3.extent(actualData, d => d[0])
         .map(item => new Date(item)))
-    .range([padding*3, width-padding]);
+    .range([padding*4, width-padding]);
 
 const yScale = d3.scaleLinear()
     .domain(d3.extent(actualData, d=> d[1]))
-    .range([ padding, height-(padding*2)])
+    .range([ padding, height-(padding*3)]);
+
+
+const yScaleAxis = d3.scaleLinear()
+    .domain(d3.extent(actualData, d=> d[1]))
+    .range([ height-(padding*2), padding]); 
 
 
 svg.selectAll("rect")
@@ -78,10 +83,26 @@ svg.selectAll("rect")
     .enter()
     .append("rect")
     .attr("x", (d) => xScale(new Date(d[0])))
-    .attr("y", (d) => ((height-padding)-yScale(d[1])))
+    .attr("y", (d) => ((height-padding*2)-yScale(d[1])))
     .attr("width", barWidth)
     .attr("height", (d) => yScale(d[1]))
     .attr("class", "svgRect");
+    
+var xAxis = d3.axisBottom().scale(xScale);
+
+    svg
+    .append("g")
+    .call(xAxis)
+    .attr("id", "x_axis")
+    .attr("transform", "translate(0,"+(height-padding*2)+")");
+
+var yAxis = d3.axisLeft().scale(yScaleAxis);
+
+    svg
+    .append("g")
+    .call(yAxis)
+    .attr("id", "y_axis")
+    .attr("transform", "translate("+padding*4+",0)");
     
 }
 
