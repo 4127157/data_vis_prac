@@ -54,45 +54,33 @@ fetch('https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/maste
 const initSvg = () => {
     
     console.log("Entered initSvg");
-    let scaledGDP = [];
-    let GDP = actualData.map(d=> d[1]);
-    let maxGDP = d3.max(GDP);
 
-    let linearScale = d3.scaleLinear()
-                        .domain([0, maxGDP])
-                        .range([padding, height-padding]);
-    
-    scaledGDP =GDP.map(d => linearScale(d));
-    console.log(scaledGDP);
-
-
-    let barWidth = width / GDP.length;
-
-    console.log("this is barWidth " +  barWidth + " And below is scaledGDP!");
-    console.log(scaledGDP);
+    let barWidth =  width/actualData.map(d=>d[1]).length;
 /*initialising SVG*/
 const svg = d3.select("#visHolder")
               .append("svg")
-              .attr("viewBox", '0 0 '+height+' '+width);
+              .attr("preserveAspectRatio", "xMinYMin meet")
+              .attr("viewBox", '0 0 '+width+' '+height);
 
 /*setting scales and axes*/
 const xScale = d3.scaleTime()
-    .domain(d3.extent(actualData, d => d[0]))
-    .range([padding, width - padding]);
+    .domain(d3.extent(actualData, d => d[0])
+        .map(item => new Date(item)))
+    .range([padding*3, width-padding]);
 
 const yScale = d3.scaleLinear()
     .domain(d3.extent(actualData, d=> d[1]))
-    .range([height - padding,  padding]);
+    .range([ padding, height-(padding*2)])
 
 
 svg.selectAll("rect")
-    .data(scaledGDP)
+    .data(actualData)
     .enter()
     .append("rect")
-    .attr("x", (d,i) => i)
-    .attr("y", (d) =>height- d )
+    .attr("x", (d) => xScale(new Date(d[0])))
+    .attr("y", (d) => ((height-padding)-yScale(d[1])))
     .attr("width", barWidth)
-    .attr("height", (d) => d)
+    .attr("height", (d) => yScale(d[1]))
     .attr("class", "svgRect");
     
 }
