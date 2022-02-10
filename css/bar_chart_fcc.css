@@ -1,5 +1,13 @@
-svg {
-    background: #DDD;
-    height:100%;
-    width:100%;
+#visHolder{
+    display:flex;
+    margin:auto;
 }
+
+svg {
+    background: #f1f1f1;
+    max-height:85vh;
+    max-width:85vw;
+    margin:auto;
+}
+
+

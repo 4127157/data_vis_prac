@@ -6,9 +6,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     var actualData,
         dater;
-    var padding = 10;
-    var height = 300,
-        width = 400;
+    var padding = 15;
+    var height = 450,
+        width = 600;
 
 function setCoreDimensions(){
 		winHeight = window.innerHeight;
@@ -55,7 +55,7 @@ const initSvg = () => {
     
     console.log("Entered initSvg");
 
-    let barWidth =  (width-padding*4)/actualData.map(d=>d[1]).length;
+    let barWidth =  (width-padding*20)/actualData.map(d=>d[1]).length;
 /*initialising SVG*/
 const svg = d3.select("#visHolder")
               .append("svg")
@@ -75,16 +75,22 @@ const yScale = d3.scaleLinear()
 
 const yScaleAxis = d3.scaleLinear()
     .domain(d3.extent(actualData, d=> d[1]))
-    .range([ height-(padding*2), padding]); 
+    .range([ height-(padding*2), padding]);
 
+const bandwidth = d3.scaleBand()
+    .domain(actualData.map(d=> d[0]))
+    .range([padding*4, width-padding+1])
+    .align(0.50);
 
 svg.selectAll("rect")
     .data(actualData)
     .enter()
     .append("rect")
-    .attr("x", (d) => xScale(new Date(d[0])))
+    .attr("x", (d) => bandwidth(d[0]))
+ /*   .attr("x", (d) => xScale(new Date(d[0])))*/
     .attr("y", (d) => ((height-padding*2)-yScale(d[1])))
     .attr("width", barWidth)
+/*    .attr("width", (d)=> bandwidth(d[0]))*/
     .attr("height", (d) => yScale(d[1]))
     .attr("class", "svgRect");
     
