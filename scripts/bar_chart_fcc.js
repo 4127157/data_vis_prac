@@ -6,9 +6,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
     var actualData,
         dater;
-    var padding = 15;
     var height = 450,
         width = 600;
+
+    var padding = (height/3)*0.1;
 
 function setCoreDimensions(){
 		winHeight = window.innerHeight;
@@ -55,7 +56,10 @@ const initSvg = () => {
     
     console.log("Entered initSvg");
 
-    let barWidth =  (width-padding*20)/actualData.map(d=>d[1]).length;
+    /* the extra 1 in data length helps in the elimination of the moire pattern
+     * on the chart */
+    let barWidth =  (width-padding*6)/actualData.map(d=>d[0]).length+1;
+
 /*initialising SVG*/
 const svg = d3.select("#visHolder")
               .append("svg")
@@ -69,46 +73,50 @@ const xScale = d3.scaleTime()
     .range([padding*4, width-padding]);
 
 const yScale = d3.scaleLinear()
-    .domain(d3.extent(actualData, d=> d[1]))
-    .range([ padding, height-(padding*3)]);
+    .domain([0,d3.max(actualData, d=> d[1])])
+/*  This was causing inaccuracy in test */ 
+    .range([ 0, height-(padding*3)]);
 
 
 const yScaleAxis = d3.scaleLinear()
-    .domain(d3.extent(actualData, d=> d[1]))
+    .domain([0,d3.max(actualData, d=> d[1])])
     .range([ height-(padding*2), padding]);
+
 
 const bandwidth = d3.scaleBand()
     .domain(actualData.map(d=> d[0]))
-    .range([padding*4, width-padding+1])
-    .align(0.50);
+    .range([padding*4, width-padding+1]);
+
+    console.log(bandwidth.step());
 
 svg.selectAll("rect")
     .data(actualData)
     .enter()
     .append("rect")
     .attr("x", (d) => bandwidth(d[0]))
- /*   .attr("x", (d) => xScale(new Date(d[0])))*/
     .attr("y", (d) => ((height-padding*2)-yScale(d[1])))
-    .attr("width", barWidth)
-/*    .attr("width", (d)=> bandwidth(d[0]))*/
+    .attr("width", barWidth) 
     .attr("height", (d) => yScale(d[1]))
-    .attr("class", "svgRect");
+    .attr("class", "bar svgRect")
+    .attr("data-date", (d)=> d[0])
+    .attr("data-gdp", (d)=> d[1]);
     
 var xAxis = d3.axisBottom().scale(xScale);
 
     svg
     .append("g")
     .call(xAxis)
-    .attr("id", "x_axis")
-    .attr("transform", "translate(0,"+(height-padding*2)+")");
+    .attr("id", "x-axis")
+    .attr("transform", "translate(0,"+(height-padding*1.5)+")");
 
 var yAxis = d3.axisLeft().scale(yScaleAxis);
 
     svg
     .append("g")
     .call(yAxis)
-    .attr("id", "y_axis")
-    .attr("transform", "translate("+padding*4+",0)");
+    .attr("id", "y-axis")
+    .attr("transform", "translate("+padding*3.5+","+0+")");
+
     
 }
 
