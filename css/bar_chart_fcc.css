@@ -4,10 +4,21 @@
 }
 
 svg {
-    background: #f1f1f1;
+/*    background: #f1f1f1;*/
     max-height:85vh;
     max-width:85vw;
     margin:auto;
 }
 
+.bar:hover {
+    fill: goldenrod;
+}
 
+.tooltip {
+    position: absolute;
+    text-align: center;
+    background: #FFF9C4;
+    pointer-events: none;
+    padding: 6px 12px;
+
+}

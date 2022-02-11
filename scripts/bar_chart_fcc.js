@@ -18,6 +18,13 @@ function setCoreDimensions(){
 		console.log("Window width: " + winWidth);
 }
 
+var tooltip = d3
+    .select("body")
+    .append("div")
+    .attr("class", "tooltip")
+    .attr("id", "tooltip")
+    .style("opacity", 0);
+
 /*This function exists for responsiveness reasons*/
 window.addEventListener('resize', () => {
 	/*Preventing excessive calls on resize from lagging the view on window resize due to any factor*/
@@ -99,7 +106,27 @@ svg.selectAll("rect")
     .attr("height", (d) => yScale(d[1]))
     .attr("class", "bar svgRect")
     .attr("data-date", (d)=> d[0])
-    .attr("data-gdp", (d)=> d[1]);
+    .attr("data-gdp", (d)=> d[1])
+    .attr("fill", "navy")
+    .on("mouseover", (e,d)=>{
+        const[x,y] = d3.pointer(e, svg);
+        tooltip
+            .transition()
+            .duration(200)
+            .style("opacity", 0.9);
+        tooltip
+            .html("Date:<br/>" + d[0] + "<br/>" + "GDP: $" + d[1] + " B")
+            .style("left", (x)+20+"px")
+            .style("top", (y)+20+ "px");
+            tooltip
+            .attr("data-date", d[0]);
+        })
+        .on("mouseout", (e,d)=>{
+            tooltip
+            .transition()
+            .duration(400)
+            .style("opacity", 0);
+        });
     
 var xAxis = d3.axisBottom().scale(xScale);
 
