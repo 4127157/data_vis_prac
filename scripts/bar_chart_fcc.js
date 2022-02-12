@@ -60,6 +60,15 @@ fetch('https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/maste
     });
 
 const initSvg = () => {
+
+
+let sourceText = document.getElementById("sourceText");
+    sourceText.innerHTML = "<strong>Source: </strong>" 
+                            + dater.source_name
+                            + " "
+                            + "<a href='" + dater.display_url + "'>" 
+                            + "(" + dater.display_url + ")"  + "</a>";
+
     
     console.log("Entered initSvg");
 
