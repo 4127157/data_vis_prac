@@ -1,3 +1,10 @@
 svg {
     background:#DDD;
 }
+
+#tooltip{
+    position: absolute;
+    background: #FFF9c4;
+    pointer-events: none;
+    padding: 6px 12px;
+}
