@@ -1,3 +1,9 @@
+/*TODO: 1) Make formatting changes
+ *      2) Make legend interactive by click
+ *      3) Clean tooltip, make modern
+ *      4) Clean up code
+ *      */
+
 window.addEventListener("DOMContentLoaded", () => {
     
     var visHolder = document.getElementById('visHolder');
@@ -33,22 +39,22 @@ window.addEventListener("DOMContentLoaded", () => {
             .attr("id", "tooltip")
             .style("opacity", 0);
 
-        
-
         var height = 450,
             width = 600, 
-            padding = (height/3)*0.1;
+            padding = (height/3)*0.1,
+            rectHeight = height*0.03,
+            rectWidth = width*0.03;
             
         const xScale = d3
             .scaleTime()
-            .domain([d3.min(data, d => d.Year)-1, d3.max(data, d => d.Year)+1 ])
-            .range([padding*4, width-padding*2]);
+            .domain([d3.min(data, d => d.Year-1), d3.max(data, d => d.Year+1) ])
+            .range([padding*2.5, width-padding*2])
+            .nice();
 
         const xScaleAxis = d3
             .scaleTime()
             .domain([new Date(d3.min(data, d => d.Year)-1,0,0), new Date(d3.max(data, d => d.Year)+1,0,0)])
-            .range([padding*4, width-padding*2])
-            .nice();
+            .range([padding*4, width-padding*2]);
 
         var maxYearScale = d3.max(data, d => {return xScale(d.Year)});
             console.log(maxYearScale);
@@ -76,6 +82,8 @@ window.addEventListener("DOMContentLoaded", () => {
             .attr("cy", (d) => {
                     return yScale(new Date(1970,0,1,0, d.Time.split(":")[0], d.Time.split(":")[1]));
             })
+            .attr("data-xvalue", d => d.Year)
+            .attr("data-yvalue", d => new Date(1970,0,1,0, d.Time.split(":")[0], d.Time.split(":")[1]))
             .style("opacity", 0.7)
             .style("fill", (d) => {
                             if(d.Doping == "")
@@ -87,7 +95,7 @@ window.addEventListener("DOMContentLoaded", () => {
             .style("stroke-width", "1px")
             .on("mouseover", (e,d)=>{
                 let directionHorizontal = () => {
-                                if(xScale(d.Year) > maxYearScale*0.7)
+                                if(xScale(d.Year) > maxYearScale*0.65)
                                     return (x)-140+"px";
                                 else
                                     return (x)+20+"px";
@@ -105,6 +113,7 @@ window.addEventListener("DOMContentLoaded", () => {
                         Time : ${d.Time}<br/>
                         ${d.Doping}
                         `)
+                    .attr("data-year", `${d.Year}`)
                     .style("left",directionHorizontal())
                     .style("top", (y)+20+"px");
             })
@@ -131,6 +140,41 @@ window.addEventListener("DOMContentLoaded", () => {
             .call(yAxis)
             .attr("id", "y-axis")
             .attr("transform", `translate(${padding*3.5}, 0)`);
-            
+
+        let flipBool = true;
+
+        var legend = svg
+                        .append('g')
+                        .attr("id", "legend")
+                        .selectAll("#legend")
+                        .data([`No Doping Allegations`, `Riders With Doping Allegations`])
+                        .enter()
+                        .append('g')
+                        .attr("class", `legend_text`)
+                        .attr(`transform`, (d,i)=>{
+                                                return `translate(0, ${height/2-i*20})`;
+                                            });
+
+        legend
+            .append('rect')
+            .attr('x', width-padding*2.5)
+            .attr('width', rectWidth)
+            .attr('height', rectHeight)
+            .style('fill', (d,i)=>{
+                if(i==0){
+                    return `#4caf50`;
+                } else {
+                    return '#3f51b5';
+                }
+            });
+
+        legend
+            .append('text')
+            .attr('x', width-padding*2.7)
+            .attr('y', 6)
+            .attr('dy', '0.3em')
+            .style('text-anchor', 'end')
+            .text((d,i) => d);
+
     }
-})
+});

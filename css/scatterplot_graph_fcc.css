@@ -1,5 +1,16 @@
+h1{
+    text-align: center;
+}
+
+#visHolder {
+    display: flex;
+    margin:auto;
+}
+
 svg {
-    background:#DDD;
+    max-height:85vh;
+    max-width : 85vw;
+    margin: auto;
 }
 
 #tooltip{
@@ -7,4 +18,8 @@ svg {
     background: #FFF9c4;
     pointer-events: none;
     padding: 6px 12px;
+}
+
+.legend_text{
+    font-size: 0.6em;
 }
