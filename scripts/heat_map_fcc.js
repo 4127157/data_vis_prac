@@ -17,8 +17,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const initSvg = (data) => {
 
-        let height = 900,
-            width = 2100, 
+        let height = 900*0.6,
+            width = 1600*0.6, 
             padding = (height/3)*0.1,
             rectHeight = padding,
             rectWidth = padding/2;
@@ -40,7 +40,7 @@ window.addEventListener("DOMContentLoaded", () => {
                         return new Date(item+1, 0);
                     }
                 }))
-            .range([0, width]);
+            .range([padding*4, width-padding]);
 /*      console.log(xScale(new Date(1867,0)));*/
         
 
@@ -54,11 +54,14 @@ window.addEventListener("DOMContentLoaded", () => {
                         return d+1;
                     }
                 }))
-            .range([0,height])
-            .nice();
+            .range([padding,height-padding*4]);
 
-        console.log(d3.extent(data.monthlyVariance, d => d.month));
-        console.log(yScale(2));
+        /*TODO: 
+         *      3) Add padding 
+         *      4) Create axes before legend and colourisation(important)
+         *      5) Thoroughly investigate legend and add
+         *      6) Make colour system that is not simply hardcoded array(borrow
+         *      from random quote project if needed)*/
 
         svg
             .selectAll(".cell")
@@ -75,12 +78,53 @@ window.addEventListener("DOMContentLoaded", () => {
                     return "yellow";
                 }
             })
-            .attr(`height`, yScale(2))
-            .attr(`width`, (width/(d3.max(data.monthlyVariance,d => d.year)
+            .attr(`height`, (height-padding*4)/12)
+            .attr(`width`, ((width-padding*5)/(d3.max(data.monthlyVariance,d => d.year)
                                  -d3.min(data.monthlyVariance, d=> d.year))
-                            ));
+            ));
 
 
+        var tempArr = [];
+        console.log(Array.from(data.monthlyVariance, d => {
+                        return d.year;
+                    })
+                    .filter(d => {
+                        if(d%10 ==0 
+                            || d == d3.min(data.monthlyVariance, d => d.year) 
+                            || d == d3.max(data.monthlyVariance, d => d.year)){
+                            if(tempArr.indexOf(d) == -1)
+                            {
+                                tempArr.push(d);
+                                return true;   
+                            }
+                        }
+                    }));
+        console.log(tempArr);
+
+
+        var xAxis = d3
+            .axisBottom()
+            .scale(xScale)
+            .tickArguments([d3.timeYear.every(13)]);
+
+
+
+        svg
+            .append("g")
+            .call(xAxis)
+            .attr("id", "x-axis")
+            .attr("transform", `translate(0, ${height-padding*3.5})`);
+        
+
+        var yAxis = d3
+            .axisLeft()
+            .scale(yScale);
+
+        svg
+            .append("g")
+            .call(yAxis)
+            .attr("id", "y-axis")
+            .attr("transform", `translate(${padding*3.5}, 0)`);
     }
 
 });
