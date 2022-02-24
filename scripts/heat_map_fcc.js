@@ -66,14 +66,24 @@ window.addEventListener("DOMContentLoaded", () => {
             const getColdTemp = () => {
                 let hue = 213,
                     sat = 100,
-                    light = 20;
+                    light = 90,
+                    procVar = Math.abs(variance),
+                    procMin = Math.abs(minVar),
+                    maxLight = 20;
+                
+                light = light + ((procVar/procMin)*(maxLight - light));
                 return `hsl(${hue}, ${sat}%, ${light}%)`;
             }
 
             const getHotTemp = () => {
                 let hue = 18,
                     sat = 100,
-                    light = 25;
+                    light = 92,
+                    procVar = Math.abs(variance),
+                    procMin = Math.abs(maxVar),
+                    maxLight = 25;
+                
+                light += ((procVar/procMin)*(maxLight - light));
                 return `hsl(${hue}, ${sat}%, ${light}%)`;
             }
 
@@ -95,10 +105,7 @@ window.addEventListener("DOMContentLoaded", () => {
             .attr(`class`, `cell`)
             .attr(`x`, d => xScale(d.year))
             .attr(`y`, d => yScale(d.month))
-            .style(`fill`, d => { 
-                console.log(getFillColor(d.variance));
-                return getFillColor(d.variance);
-            })
+            .style(`fill`, d => getFillColor(d.variance))
             .attr(`height`, yScale.bandwidth()+(yScale.bandwidth()*0.015) )
             .attr(`width`, xScale.bandwidth()+(xScale.bandwidth()*0.18));
 
