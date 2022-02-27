@@ -1,3 +1,9 @@
+/*TODO: 1) Code optimisation(maybe utilise canvas instead?) and cleanup
+ *      2) Add labels
+ *      3) Improve legend to better represent the colour range on the
+ *      chart(take average of below 0 and above and make calculations on that)
+ * */
+
 window.addEventListener("DOMContentLoaded", () => {
     var visHolder = document.getElementById(`visHolder`);
 
@@ -22,7 +28,12 @@ window.addEventListener("DOMContentLoaded", () => {
             width = 1600*0.6, 
             padding = (height/3)*0.1,
             rectHeight = padding,
-            rectWidth = padding/2;
+            rectWidth = padding/2,
+            maxVariance = d3.max(data.monthlyVariance, d => d.variance),
+            minVariance = d3.min(data.monthlyVariance, d => d.variance),
+            minYear = d3.min(data.monthlyVariance, d => d.year),
+            maxYear = d3.max(data.monthlyVariance, d=> d.year),
+            legSplitArr = [4,0,4]
 
         const tooltip = d3
             .select("body")
@@ -39,7 +50,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const xScale = d3
             .scaleBand()
             .domain(Array.from(data.monthlyVariance, d=> d.year))
-            .range([padding*5, (width-padding)]);
+            .range([padding*4, (width-padding)]);
 
         const yScale = d3
             .scaleBand()
@@ -48,49 +59,18 @@ window.addEventListener("DOMContentLoaded", () => {
                         return d-1;
                     
                 }))
-            .range([padding,height-padding*4]);
+            .range([padding,height-padding*7]);
 
-        /*TODO: 
-         *      6) Thoroughly investigate legend and add
-            *   7) Add tooltip*/
-
-        const getFillColor = (variance) => {
-            let maxVar = d3.max(data.monthlyVariance, d => d.variance);
-            let minVar = d3.min(data.monthlyVariance, d => d.variance);
-
-            const getColdTemp = () => {
-                let hue = 213,
-                    sat = 100,
-                    light = 90,
-                    procVar = Math.abs(variance),
-                    procMin = Math.abs(minVar),
-                    maxLight = 20;
-                
-                light = light + ((procVar/procMin)*(maxLight - light));
-                return `hsl(${hue}, ${sat}%, ${Math.round(light)}%)`;
-            }
-
-            const getHotTemp = () => {
-                let hue = 18,
-                    sat = 100,
-                    light = 92,
-                    procVar = Math.abs(variance),
-                    procMin = Math.abs(maxVar),
-                    maxLight = 25;
-                
-                light += ((procVar/procMin)*(maxLight - light));
-                return `hsl(${hue}, ${sat}%, ${Math.round(light)}%)`;
-            }
-
-            if(variance < 0) {
-                return getColdTemp();
-            } else if (variance > 0) {
-                return getHotTemp();
-            } else {
-                return 'yellow';
-            }
-
-        }
+        const exprColrScale = d3
+            .scalePow()
+            .exponent([0.2])
+            .domain([minVariance, 
+                    (Math.round((minVariance-(minVariance+0.07))*100)/100), 
+                    0,
+                    (Math.round((maxVariance-(maxVariance-0.07))*100)/100),
+                    maxVariance])
+            .range(['#002e66', '#a8cfff', '#81C784', '#ffbb9e', '#802600'])
+            .clamp(true);
 
         svg
             .selectAll(".cell")
@@ -100,7 +80,9 @@ window.addEventListener("DOMContentLoaded", () => {
             .attr(`class`, `cell`)
             .attr(`x`, d => xScale(d.year))
             .attr(`y`, d => yScale(d.month-1))
-            .style(`fill`, d => getFillColor(d.variance))
+            .style(`fill`, d => {
+                return exprColrScale(d.variance);
+            })
             .attr(`height`, yScale.bandwidth()+(yScale.bandwidth()*0.015))
             .attr(`width`, xScale.bandwidth()+(xScale.bandwidth()*0.18))
             .attr('data-month', d=> d.month-1)
@@ -123,8 +105,8 @@ window.addEventListener("DOMContentLoaded", () => {
                 tooltip
                     .html(`
                         ${d.year} - ${format(date)}<br/>
-                        ${Math.round((data.baseTemperature+(d.variance)+Number.EPSILON)*100)/100}<br/>
-                        ${d.variance}`)
+                        ${Math.round((data.baseTemperature+(d.variance)+Number.EPSILON)*100)/100}C<br/>
+                        ${d.variance <0 ? d.variance+"C" : d.variance > 0 ? "+"+d.variance+"C" : d.variance }`)
                     .attr("data-year", `${d.year}`);
                     
                 tooltip
@@ -146,15 +128,14 @@ window.addEventListener("DOMContentLoaded", () => {
                     .style("opacity", 0);
             });
 
-
         var yearTicks = []; 
         yearTicks = Array.from(data.monthlyVariance, d => {
                         return d.year;
                     })
                     .filter(d => {
                         if(d%12 ==0 
-                            || d == d3.min(data.monthlyVariance, d => d.year) 
-                            || d == d3.max(data.monthlyVariance, d => d.year)){
+                            || d == minYear
+                            || d == maxYear) {
                             if(yearTicks.indexOf(d) == -1)
                             {
                                 yearTicks.push(d);
@@ -172,7 +153,7 @@ window.addEventListener("DOMContentLoaded", () => {
             .append("g")
             .call(xAxis)
             .attr("id", "x-axis")
-            .attr("transform", `translate(0, ${height-padding*3.5})`);
+            .attr("transform", `translate(0, ${height-padding*6.5})`);
         
         var yAxis = d3
             .axisLeft()
@@ -189,15 +170,64 @@ window.addEventListener("DOMContentLoaded", () => {
             .append("g")
             .call(yAxis)
             .attr("id", "y-axis")
-            .attr("transform", `translate(${padding*4.5}, 0)`);
+            .attr("transform", `translate(${padding*3.5}, 0)`);
 
+        const legendDomain = () => {
+            let tempArr = [];
+            for(let i=0; i<legSplitArr.length; i++){
+                if(legSplitArr[i] == 0){
+                    tempArr.push(0);
+                } else {
+                    for(let j=0; j<legSplitArr[i]; j++){
+                        if(i == 0){
+                            tempArr.push(Math.round(minVariance/(j+1)*100)/100);
+                        } else if(i == 2){
+                            tempArr.push(Math.round((maxVariance/(legSplitArr[i]-j))*100)/100);
+                        }
+                    }
+                }
+            }
+
+            return tempArr;
+        };
+
+        const legendScale = d3
+                        .scaleBand()
+                        .domain(legendDomain())
+                        .range([0, width/3.15])
+                        .paddingInner(0.02)
+                        .paddingOuter(0.5);
+
+        var legend = svg
+                        .append("g")
+                        .attr("id", "legend")
+                        .attr("transform", `translate(${padding*3}, 0)`);
+
+        legend
+            .append("g")
+            .selectAll("rect")
+            .data(legendDomain())
+            .enter()
+            .append("rect")
+            .attr("x", d => legendScale(d))
+            .attr("y", height-(legendScale.bandwidth()*2))
+            .attr("height", legendScale.bandwidth())
+            .attr("width", legendScale.bandwidth())
+            .style("fill",d => exprColrScale(d));
+        
+        var legendAxis = d3
+                            .axisBottom()
+                            .scale(legendScale)
+                            .tickValues(legendDomain());
+
+        legend
+                .append("g")
+                .call(legendAxis)
+                .attr("id", "legend-axis")
+                .attr("transform", `translate(0, ${height-(legendScale.bandwidth()*0.9)})`);
 
         document.getElementById('fromYr').innerText = data.monthlyVariance[0].year;  
         document.getElementById('toYr').innerText = data.monthlyVariance[data.monthlyVariance.length-1].year;
-        document.getElementById('baseTemp').innerText = data.baseTemperature;
-                    
-
-
-
+        document.getElementById('baseTemp').innerText = data.baseTemperature+"C";
     }
 });
