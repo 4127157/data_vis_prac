@@ -182,7 +182,7 @@ window.addEventListener("DOMContentLoaded", () => {
                         if(i == 0){
                             tempArr.push(Math.round(minVariance/(j+1)*100)/100);
                         } else if(i == 2){
-                            tempArr.push(Math.round((maxVariance/(legSplitArr[i]-j))*100)/100);
+                            tempArr.push("+"+(Math.round((maxVariance/(legSplitArr[i]-j))*100)/100));
                         }
                     }
                 }
