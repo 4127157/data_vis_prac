@@ -149,5 +149,41 @@ window.addEventListener("DOMContentLoaded", () => {
             .call(legendAxis)
             .attr('id', 'legend-axis')
             .attr("transform", `translate( 0,${height-(legendScale.bandwidth()*5.2)})`);
+
+        mapDrawCounties
+            .on("mouseover", (e, d) => {
+                const[x, y] = d3.pointer(e,svg);
+                let temp = data.filter(i => i.fips === d.id);
+                let area = temp[0].area_name;
+                let edu = temp[0].bachelorsOrHigher;
+
+                tooltip
+                    .transition()
+                    .duration(200)
+                    .style('position', 'absolute')
+                    .style("opacity", 0.9)
+                    .style('left', `${(x)}px`)
+                    .style('top', `${(y)-40}px`)
+                    .style('background', '#80CBC4')
+                    .style('padding', '10px');
+
+                tooltip
+                    .html(`
+                    ${area}<br>
+                    ${edu}%<br>
+                `)
+                    .attr('data-education', `${edu}`);
+
+                e.target.style.stroke = 'black';
+            })
+            .on("mouseout", (e,d)=>{
+                e.target.style.stroke = '';
+                tooltip
+                    .transition()
+                    .duration(400)
+                    .style('opacity', 0);
+            });
+                        
+
     }
 });
