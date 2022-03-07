@@ -2,6 +2,11 @@ section {
     text-align: center;
 }
 
+svg {
+    max-height: 85vh;
+    width:auto;
+}
+
 .counties {
     fill:none;
 }
