@@ -32,7 +32,13 @@ window.addEventListener("DOMContentLoaded", () => {
             padding = (height/3)*0.1,
             minValue = d3.min(data, d => d.bachelorsOrHigher),
             maxValue = d3.max(data, d => d.bachelorsOrHigher),
-            legendDivs = 5;
+            legendDivs = 9;
+
+        const tooltip = d3
+            .select('body')
+            .append('div')
+            .attr('id', 'tooltip')
+            .style('opacity', 0);
 
         const colorScale = d3
             .scalePow()
@@ -92,9 +98,17 @@ window.addEventListener("DOMContentLoaded", () => {
             let max = Math.ceil(maxValue);
             let min = Math.ceil(minValue);
 
+            let temp = 0;
             for(let i = legendDivs; i>0; i--){
-                let temp = max-max/i;
-                temp+=min;
+                if(i == legendDivs || i == 1){
+                    if(i == legendDivs){
+                        temp = min;
+                    } else {
+                        temp = max;
+                    }
+                } else {
+                    temp += max/legendDivs;
+                }
                 tempArr.push(Math.round(temp));
             }
             return tempArr;
@@ -103,9 +117,9 @@ window.addEventListener("DOMContentLoaded", () => {
         const legendScale = d3
             .scaleBand()
             .domain(legendDomain())
-            .range([0,width/3.15])
+            .range([(width-(width/3.25)),width-15])
             .paddingInner(0.01)
-            .paddingOuter(0.5)
+            .paddingOuter(0.25)
             .round(true);
 
         var legend = svg
@@ -120,8 +134,8 @@ window.addEventListener("DOMContentLoaded", () => {
             .enter()
             .append('rect')
             .attr('x', d => legendScale(d))
-            .attr('y', d => height-(legendScale.bandwidth()*2))
-            .attr('height', legendScale.bandwidth())
+            .attr('y', d => height-(legendScale.bandwidth()*5.5))
+            .attr('height', legendScale.bandwidth()*0.2)
             .attr('width', legendScale.bandwidth())
             .style('fill', d => colorScale(d));
 
@@ -134,6 +148,6 @@ window.addEventListener("DOMContentLoaded", () => {
             .append('g')
             .call(legendAxis)
             .attr('id', 'legend-axis')
-            .attr("transform", `translate(0,${height-(legendScale.bandwidth())})`);
+            .attr("transform", `translate( 0,${height-(legendScale.bandwidth()*5.2)})`);
     }
 });
