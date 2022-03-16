@@ -40,9 +40,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
         let treemap = d3
             .treemap()
-            .size([width, treeHeight])
+            .size([width, height-padding])
             .paddingInner(1);
-        treemap.tile(d3.treemapSquarify);
+        treemap.tile(d3.treemapBinary);
         treemap(root);
 
         const getCol = (num) => {
@@ -78,7 +78,7 @@ window.addEventListener("DOMContentLoaded", () => {
             .selectAll('rect')
             .data(root.leaves())
             .join('rect')
-            .style('opacity', 0.3)
+            .style('opacity', 0.4)
             .style('fill',d=> getFill(d.parent.data.name))
             .classed('tile', true)
             .attr('data-name', d => d.data.name)
@@ -88,6 +88,35 @@ window.addEventListener("DOMContentLoaded", () => {
             .attr('y', d => d.y0)
             .attr('width', d => d.x1 - d.x0)
             .attr('height', d => d.y1 - d.y0);
+
+        let legend = d3
+            .select('#visHolder')
+            .append('div')
+            .attr('id', 'legend');
+
+        var legendBox = legend
+            .selectAll('div')
+            .data(parentStore)
+            .join('div')
+            .classed('legend-div', true);
+
+        var legendFact = legendBox
+            .append('svg')
+            .attr('height', height*0.05)
+            .attr('width', height*0.05);
+
+        var legendRect = legendFact
+            .append('rect')
+            .classed('legend-item', true)
+            .attr('height', height*0.05)
+            .attr('width', height*0.05)
+            .style('fill', d=> getFill(d))
+            .style('opacity', 0.4);
+
+        var legendText = legendBox
+            .append('text')
+            .text(d => d.toString())
+            .classed('legend-div-text', true);
         
         /*TODO:
          * 1) use a different treemap style for the legend to implement
