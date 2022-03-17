@@ -44,7 +44,14 @@ window.addEventListener("DOMContentLoaded", () => {
             .paddingInner(1);
         treemap.tile(d3.treemapBinary);
         treemap(root);
-
+        
+        const tooltip = d3
+            .select('body')
+            .append('div')
+            .attr('id', 'tooltip')
+            .style('opacity', 0)
+            .style('position', 'absolute');
+    
         const getCol = (num) => {
             num = num+1;
             let h,
@@ -74,38 +81,88 @@ window.addEventListener("DOMContentLoaded", () => {
             console.log(item);
         }
 
-        let treeRects = svg
-            .selectAll('rect')
+        let treeNode = svg
+            .selectAll('g')
             .data(root.leaves())
-            .join('rect')
+            .join('g')
+            .attr('transform', d=> `translate(${[d.x0, d.y0]})`)
+
+        treeNode
+            .on('mouseover', (e,d) => {
+                e.target.parentNode.style.opacity = 0.7;
+            })
+            .on('mousemove', (e,d)=>{
+                const[x,y] = d3.pointer(e, svg);
+
+                tooltip
+                    .transition()
+                    .duration(200)
+                    .style('opacity', 0.9);
+
+                tooltip
+                    .html(`
+                    ${d.data.name}<br/>
+                    Platform - ${d.parent.data.name}<br/>
+                    Value - ${d.data.value}
+                    `)
+                    .attr('data-value', `${d.data.value}`)
+                    .style('left', x+20+'px')
+                    .style('top', y-40+'px');
+
+            })
+            .on('mouseout', (e,d) => {
+                e.target.parentNode.style.opacity = '';
+                tooltip
+                    .transition()
+                    .duration(300)
+                    .style('opacity', 0);
+            });
+
+        let treeRects = treeNode
+            .append('rect')
             .style('opacity', 0.4)
             .style('fill',d=> getFill(d.parent.data.name))
             .classed('tile', true)
             .attr('data-name', d => d.data.name)
             .attr('data-category', d=> d.data.category)
             .attr('data-value', d => d.data.value)
-            .attr('x', d => d.x0)
-            .attr('y', d => d.y0)
+            /* .attr('x', d => d.x0)
+            * .attr('y', d => d.y0)
+            * There is no need to provide this because of the parent element
+            * containing this information
+            * */
             .attr('width', d => d.x1 - d.x0)
             .attr('height', d => d.y1 - d.y0);
+
+
+        let treeText = treeNode
+            .append('foreignObject')
+            .attr('dx', 4)
+            .attr('dy', 14)
+            .attr('width',d=>d.x1-d.x0)
+            .attr('height', d=> d.y1-d.y0)
+            .append('xhtml:div')
+            .style('font-size', '0.45em')
+            .style('padding', '3px')
+            .text(d => d.data.name);
 
         let legend = d3
             .select('#visHolder')
             .append('div')
             .attr('id', 'legend');
 
-        var legendBox = legend
+        let legendBox = legend
             .selectAll('div')
             .data(parentStore)
             .join('div')
             .classed('legend-div', true);
 
-        var legendFact = legendBox
+        let legendFact = legendBox
             .append('svg')
             .attr('height', height*0.05)
             .attr('width', height*0.05);
 
-        var legendRect = legendFact
+        let legendRect = legendFact
             .append('rect')
             .classed('legend-item', true)
             .attr('height', height*0.05)
@@ -113,7 +170,7 @@ window.addEventListener("DOMContentLoaded", () => {
             .style('fill', d=> getFill(d))
             .style('opacity', 0.4);
 
-        var legendText = legendBox
+        let legendText = legendBox
             .append('text')
             .text(d => d.toString())
             .classed('legend-div-text', true);
